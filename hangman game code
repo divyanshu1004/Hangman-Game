@@ -1,0 +1,227 @@
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
+import java.awt.event.*;
+//This code will use arrays, lists, and some basic GUI with functionality.
+public class Hangman{
+    /*This list has asterisks for the letters not found and letters for the letters found. This list will be looped through in order to display
+      what is known and unknown about the word so far. */
+    static List<String> phrases=new ArrayList<String>(); 
+    //This JFrame will be used to create a GUI window.
+    static JFrame jFrame=new JFrame(); 
+    /*This is the primary label which will display the list phrases. After the player guesses the whole word, this variable 
+      will also be used to display a text telling what the final word is and also how many mistakes the player made when guessing the word. */ 
+    static JLabel label=new JLabel(""); 
+    /*This label will only be used to tell the player if the letter the player guessed is not in the word or if the letter the player guessed
+    is already in the world */
+    static JLabel complementaryLabel=new JLabel(""); 
+    /*This will be the text field where the player inputs the player's answer. If the enter key is pressed in the text field, the text in the 
+    text field is then processed.*/
+    static JTextField textArea=new JTextField("");
+    static char userInput;
+    //When this button is clicked, the text in the text field is then processed.
+    static JButton button=new JButton("Enter");
+    static boolean wordIsGuessed = false;
+    //This boolean will determine if text in the text field is being processed.
+    static boolean buttonPressed=false;
+
+    static int numIncorrectGuesses =0;
+
+    public static void main(String[] args) {
+        //GUI elements are created.
+        jFrame.setResizable(false);
+        jFrame.setLayout(null);
+        jFrame.setSize(600, 900);
+        jFrame.setVisible(true);
+        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        label.setBounds(150, 225, 400, 400);
+        complementaryLabel.setBounds(150, 450, 400, 400);
+        textArea.setBounds(150, 600, 25, 25);
+        textArea.setFocusable(true);
+        button.setBounds(200, 600, 100, 25);
+        jFrame.add(label);
+        jFrame.add(complementaryLabel);
+        jFrame.add(textArea);
+        jFrame.add(button);
+
+
+        String[] words = { "Apple", "Banana", "Carrot", "Dates", "Eggplant", "Fig", "Grapes", "Jackfruit", "Kiwi", "Lemon", "Mango", "Onion", "Peach", "Radish", "Strawberry", "Tomato", "Victoria plum", "Watermelon", "Zucchini",
+            "Beetroot","Durian", "Endive", "Fennel", "Guava",
+            "Horseradish", "Kale", "Lime", "Mulberry", "Olive", "Papaya", "Raspberry", "Spinach", "Tangerine", "Vanilla bean", "Wasabi" };
+
+        // Pick a random index of words array
+        int randomWordNumber = (int) (Math.random() * words.length);
+        // Create an array to store already entered letters
+        char[] enteredLetters=new char[words[randomWordNumber].length()];
+        int triesCount = 0;
+
+        //When this button is clicked, the function CheckString is called.
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                CheckString();
+            }
+        });
+        /*The textArea variable can use the button's action listener. When the enter key is pressed inside the text field, 
+        the function CheckString is called. */
+        textArea.addActionListener(button.getActionListeners()[0]);
+        do {
+        // infinitely iterate through cycle as long as enterLetter returns true
+        // if enterLetter returns false that means user guessed all the letters
+        // in the word e. g. no asterisks were displayed by printWord
+        switch (enterLetter(words[randomWordNumber], enteredLetters)) {
+            case 0:
+                triesCount++;
+                break;
+            case 1:
+                triesCount++;
+                break;
+            case 2:
+                break;
+            case 3:
+                wordIsGuessed = true;
+                //The button and the text field are hidden to prevent further input from the player.
+                button.setVisible(false);
+                textArea.setVisible(false);
+                break;
+            case 4:
+            //The game is over because the player made 5 incorrect guesses
+                wordIsGuessed = true;
+                break;
+        }
+        } while (! wordIsGuessed);
+
+        label.setText("\nThe word is " + words[randomWordNumber] +
+            ". You missed " + (triesCount -findEmptyPosition(enteredLetters)) +
+            " time(s).");
+      //The complementaryLabel is not needed now, so it is set to an empty string to hide this label.
+        complementaryLabel.setText("");
+    }
+
+    /* Hint user to enter a guess letter,
+    returns 0 if letter entered is not in the word (counts as try),
+    returns 1 if letter were entered 1st time (counts as try),
+    returns 2 if already guessed letter was REentered,
+    returns 3 if all letters were guessed */
+    public static int enterLetter(String word, char[] enteredLetters)    {
+    
+        //The old txt in the list is first cleared before new text is added.
+        phrases.clear();
+        //Strings are added to the phrases list
+        phrases.add("Enter a letter in word ");
+        // If-clause is true if no asterisks were displayed so
+        // word is successfully guessed
+        if (! printWord(word, enteredLetters))
+            return 3;
+
+        /*Sentence is a string variable that will be equal to the concatenated version of all the strings inside the phrases list.
+         This variable will be used to display the whole sentence that was broken down into individual pieces inside the phrases list.
+          */
+        String sentence="";
+        for (int i=0; i<phrases.size(); i++) {
+            sentence+=phrases.get(i);
+        }
+       label.setText(sentence);
+        int emptyPosition = findEmptyPosition(enteredLetters);
+
+        //The code inside the if statement will only execute if the text inside the text field is being processed.
+       if(buttonPressed) {
+        if (inEnteredLetters(userInput, enteredLetters)) {
+            //The complementaryLabel displays to the player that the letter the player inputed is already in the word.
+            complementaryLabel.setText(userInput+" is already in the word");
+            //This variable is set to false, which means that the text inside the text field is not being processed any more.
+            buttonPressed=false;
+
+            return 2;
+        }
+        else if (word.contains(String.valueOf(userInput))) {
+            enteredLetters[emptyPosition] = userInput;
+            //The complementaryLabel is not needed now, so it is set to an empty string to hide this label.
+            complementaryLabel.setText("");
+            //This variable is set to false, which means that the text inside the text field is not being processed any more.
+            buttonPressed=false;
+
+            return 1;
+        }
+        else {
+            //The complementaryLabel displays to the player that the letter the player inputed is not in the word.
+            complementaryLabel.setText(userInput + " is not in the word");
+             //Button pressed is set to false, which means that the text inside the text field is not being processed any more.
+            buttonPressed=false;
+             // Check if the number of incorrect guesses has reached 5
+             numIncorrectGuesses++;
+             if (numIncorrectGuesses >= 5) {
+                // The game is over, so hide the button and text field
+                button.setVisible(false);
+                textArea.setVisible(false);
+                // Return a special value to indicate that the game is over
+                return 4;
+            }
+            return 0;
+            }
+       }
+       return 2;
+
+    }
+
+    /* Displays word with asterisks for hidden letters, returns true if
+    asterisks were printed, otherwise return false */
+    public static boolean printWord(String word, char[] enteredLetters) {
+        // Iterate through all letters in word
+        boolean asteriskPrinted = false;
+        for (int i = 0; i < word.length(); i++) {
+            char letter = word.charAt(i);
+            // Check if letter already have been entered by the user before
+            if (inEnteredLetters(letter, enteredLetters)) {
+                phrases.add(String.valueOf(letter));// If yes - add it to the phrases list for displaying
+            }
+            else {
+                phrases.add("*"); //Asterisks are added to the phrases lists for letters that are not found by the player yet.
+                asteriskPrinted = true;
+            }
+        }
+        return asteriskPrinted;
+    }
+    /*This function is called when the player presses the Enter key in the text field or when the player clicks on the enter button.
+      The main purpose of this function is to get what is needed from the player's input to use for processing.
+     */
+    public static void CheckString() {
+            /* It is possible for the player to input a value that will cause an error in the code. The value that can cause an error in this
+               code would be ''. This is because userInput will not find anything in textArea.getText().charAt(0). Therefore, the try and catch
+               method is used to avoid errors.
+             */
+            try {
+             userInput=textArea.getText().charAt(0);
+            }
+            catch(Exception err) {
+                return;
+            }
+            //If the userInput is not empty, it will be readied for processing.
+             if(userInput!=' ') {
+                 buttonPressed=true;
+                 /*After the player inputs text for processing, the string inside the textArea will be deleted. This is not necessarily 
+                  * required, but it is a nice feature.
+                  */
+                textArea.setText(null);
+             }
+    }
+    /* Check if letter is in enteredLetters array */
+    public static boolean inEnteredLetters(char letter, char[] enteredLetters) {
+        return new String(enteredLetters).contains(String.valueOf(letter));
+    }
+
+    /* Find first empty position in array of entered letters (one with code \u0000) */ 
+    public static int findEmptyPosition(char[] enteredLetters) {
+        int i = 0;
+
+        //This for loop goes through all the elements inside the function and it is used to find the first empty space in the array. 
+        for(int iterator=0; iterator<enteredLetters.length; iterator++) { 
+            if(enteredLetters[iterator]=='\u0000') break;
+            i++;
+        }
+        return i;
+    }
+
+
+
+}
